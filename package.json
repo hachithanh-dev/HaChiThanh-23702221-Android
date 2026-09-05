@@ -6,12 +6,19 @@
   "scripts": {
     "build": "tsc",
     "start": "ts-node src/main.ts",
-    "dev": "ts-node-dev --respawn src/main.ts"
+    "dev": "ts-node-dev --respawn src/main.ts",
+    "async": "ts-node src/async/main.ts"
   },
-  "keywords": ["typescript", "oop", "exercises", "design-patterns"],
+  "keywords": [
+    "typescript",
+    "oop",
+    "exercises",
+    "design-patterns"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/node": "^26.4.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   }
