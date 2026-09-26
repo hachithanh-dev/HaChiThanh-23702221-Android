@@ -1,72 +1,123 @@
 // ============================================================================
-// BÀI TẬP TỔNG HỢP: GIỜ 1 + GIỜ 2 + GIỜ 3
-// Màn hình Trang chủ BookStore Online hoàn chỉnh
+// GIỜ 4 — BÀI TẬP 1: MÀN HÌNH TRANG CHỦ BOOKSTORE HOÀN CHỈNH
+// Đề bài: Ghép Header (Giờ 1), Category Chips (Giờ 2), Book Grid (Giờ 3) và
+// Floating Cart Button (Giờ 4) thành 1 màn hình Home hoàn chỉnh có thể cuộn được.
+// Yêu cầu kỹ thuật:
+// - SafeAreaView (flex: 1) > Header (cố định ngoài ScrollView) >
+//   ScrollView (flex: 1, showsVerticalScrollIndicator={false}, paddingBottom đủ lớn)
+//   > Floating Cart Button (absolute, cùng cấp ScrollView, nằm ngoài).
 // Sinh viên: Hà Chí Thanh — MSSV: 23702221
-// Đúng 100% khung mẫu hướng dẫn trang 5 của Week_3_Layout_UI.pdf
 // ============================================================================
 import React, { useState } from 'react';
-import { View, ScrollView, Text, StyleSheet } from 'react-native';
+import { View, ScrollView, Text, StyleSheet, SafeAreaView } from 'react-native';
 import { Header } from '../components/Header';
 import { CategoryChips } from '../components/CategoryChips';
 import { BookGrid } from '../components/BookGrid';
 import { FloatingCartButton } from '../components/FloatingCartButton';
-import { BOOKS } from '../data';
+import { Book, BOOKS } from '../data';
 
-export function HomeScreen() {
-  const [cartCount, setCartCount] = useState<number>(0);
+interface HomeScreenProps {
+  cartCount?: number;
+  onCartPress?: () => void;
+  onSelectBook?: (book: Book) => void;
+}
+
+export function HomeScreen({
+  cartCount: externalCartCount,
+  onCartPress,
+  onSelectBook,
+}: HomeScreenProps) {
+  const [internalCartCount, setInternalCartCount] = useState<number>(3);
   const [selectedCat, setSelectedCat] = useState<string>('Văn học');
 
+  const cartCount = externalCartCount !== undefined ? externalCartCount : internalCartCount;
+  const scrollRef = React.useRef<ScrollView>(null);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const q = (window.location.search + window.location.hash).toLowerCase();
+      if (q.includes('scroll')) {
+        setTimeout(() => {
+          scrollRef.current?.scrollTo({ y: 400, animated: false });
+        }, 300);
+      }
+    }
+  }, []);
+
+  const handleCartPress = () => {
+    if (onCartPress) {
+      onCartPress();
+    } else {
+      setInternalCartCount((prev) => prev + 1);
+    }
+  };
+
+  const handleBookPress = (id: number) => {
+    const foundBook = BOOKS.find((b) => b.id === id);
+    if (onSelectBook && foundBook) {
+      onSelectBook(foundBook);
+    } else {
+      setInternalCartCount((prev) => prev + 1);
+    }
+  };
+
   return (
-    <View style={styles.screen}>
-      {/* 1. Header cố định trên cùng ngoài ScrollView */}
-      <Header
-        title="📚 BookStore"
-        onCartPress={() => setCartCount((prev) => prev + 1)}
-      />
-
-      {/* 2. ScrollView chứa Chips + Grid — paddingBottom đủ lớn để
-             FloatingCartButton không che mất sách cuối cùng */}
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={true}
-      >
-        {/* Banner giới thiệu */}
-        <View style={styles.banner}>
-          <Text style={styles.bannerTitle}>🎉 Chào mừng bạn đến BookStore Online</Text>
-          <Text style={styles.bannerSubtitle}>
-            Học phần Thực hành Lập trình Thiết bị di động — Bài tập Tuần 3: Layout Flexbox
-          </Text>
-        </View>
-
-        {/* 2.1. Hàng Category Chips */}
-        <Text style={styles.sectionHeader}>Danh mục nổi bật</Text>
-        <CategoryChips onSelectCategory={(cat) => setSelectedCat(cat)} />
-
-        {/* 2.2. Lưới sách 2 cột có gắn DiscountBadge */}
-        <View style={styles.gridHeader}>
-          <Text style={styles.sectionHeader}>Sách đề xuất ({selectedCat})</Text>
-          <Text style={styles.bookCount}>{BOOKS.length} cuốn sách</Text>
-        </View>
-        <BookGrid
-          books={BOOKS}
-          onPressBook={(id) => {
-            console.log(`Đã thêm sách ID #${id} vào giỏ hàng`);
-            setCartCount((prev) => prev + 1);
-          }}
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.screen}>
+        {/* 1. Header cố định trên cùng — NGOÀI ScrollView */}
+        <Header
+          title="📚 BookStore"
+          onCartPress={handleCartPress}
         />
-      </ScrollView>
 
-      {/* 3. Nút giỏ nổi — NGOÀI ScrollView, neo absolute cố định ở góc dưới phải */}
-      <FloatingCartButton
-        count={cartCount}
-        onPress={() => setCartCount((prev) => prev + 1)}
-      />
-    </View>
+        {/* 2. ScrollView (flex: 1) chứa Chips + Grid
+               showsVerticalScrollIndicator={false}
+               contentContainerStyle có paddingBottom đủ lớn (110) để Grid
+               không bị nút giỏ hàng che mất phần tử cuối */}
+        <ScrollView
+          ref={scrollRef}
+          style={styles.scrollView}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Banner chào mừng */}
+          <View style={styles.banner}>
+            <Text style={styles.bannerTitle}>🎉 Chào mừng bạn đến BookStore Online</Text>
+            <Text style={styles.bannerSubtitle}>
+              Học phần Thực hành Lập trình Thiết bị Di động — Tuần 4: Layout Flexbox Toàn Diện
+            </Text>
+          </View>
+
+          {/* 2.1. Hàng Category Chips */}
+          <Text style={styles.sectionHeader}>Danh mục nổi bật</Text>
+          <CategoryChips onSelectCategory={(cat) => setSelectedCat(cat)} />
+
+          {/* 2.2. Lưới sách 2 cột có gắn DiscountBadge */}
+          <View style={styles.gridHeader}>
+            <Text style={styles.sectionHeader}>Sách đề xuất ({selectedCat})</Text>
+            <Text style={styles.bookCount}>{BOOKS.length} cuốn sách</Text>
+          </View>
+          <BookGrid
+            books={BOOKS}
+            onPressBook={handleBookPress}
+          />
+        </ScrollView>
+
+        {/* 3. Nút giỏ nổi — NGOÀI ScrollView (cùng cấp), neo absolute cố định ở góc dưới phải */}
+        <FloatingCartButton
+          count={cartCount}
+          onPress={handleCartPress}
+        />
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#1E1B4B',
+  },
   screen: {
     flex: 1,
     backgroundColor: '#F8FAFC',
@@ -77,7 +128,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingBottom: 110, // Đệm đáy đảm bảo không bị che item cuối bởi nút giỏ hàng
+    paddingBottom: 110, // Đệm đáy đảm bảo không bị nút giỏ hàng che phần tử cuối
   },
   banner: {
     backgroundColor: '#312E81',
